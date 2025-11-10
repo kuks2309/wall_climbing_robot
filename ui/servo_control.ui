@@ -460,61 +460,6 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="calibrationGroup">
-      <property name="title">
-       <string>C620 캘리브레이션</string>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
-       <item>
-        <widget class="QLabel" name="label_calibration_info">
-         <property name="text">
-          <string>처음 사용 시 또는 모터가 반응하지 않을 때 캘리브레이션을 수행하세요.</string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_9">
-         <item>
-          <widget class="QPushButton" name="btn_calibrate_c620">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>40</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">background-color: #FF9800; color: white; font-weight: bold;</string>
-           </property>
-           <property name="text">
-            <string>캘리브레이션 (전원 OFF 필요)</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="btn_arm_c620">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>40</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">background-color: #4CAF50; color: white; font-weight: bold;</string>
-           </property>
-           <property name="text">
-            <string>아밍 (3초)</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
      <widget class="QGroupBox" name="protocolGroup">
       <property name="title">
        <string>프로토콜 정보</string>

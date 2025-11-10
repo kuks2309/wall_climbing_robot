@@ -21,7 +21,15 @@ void setup()
 
   // put your setup code here, to run once:
   Serial1.begin(9600); // Serial Port 1
-  Serial.begin(9600);
+  while(!Serial1)
+  {
+    ;
+  }
+  Serial.begin(115200);
+  while(!Serial)
+  {
+    ;
+  }
 
   // Timer1 설정
   TCCR1A = 0;
@@ -44,25 +52,22 @@ void setup()
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
+  // main loop는 비워둠 - serialEvent1()에서 처리
+}
 
-  int read_byte = 0;
-  unsigned char in_byte;
-  read_byte = Serial1.available();
-  //  Serial.print("data in : ");
-  //  Serial.println(read_byte);
-
-  if (read_byte > 0)
+// Serial1 이벤트 핸들러 (Serial1에 데이터가 도착하면 자동 호출)
+void serialEvent1()
+{
+  while (Serial1.available())
   {
-    Serial.print("data in : ");
-    Serial.println(read_byte);
-
+    // 버퍼 시프트
     for (int i = 0; i < NO_DATA - 1; i++)
     {
       buf[i] = buf[i + 1];
     }
     buf[NO_DATA - 1] = Serial1.read();
 
+    // 프로토콜 확인: # ... *
     if ( (buf[0] == '#') && (buf[NO_DATA - 1] == '*') )
     {
       pwm_command1.bytedata[1] = buf[1];
@@ -81,14 +86,18 @@ void loop()
 
       Serial.print(pwm_command1.bytedata[1], HEX);
       Serial.println(pwm_command1.bytedata[0], HEX);
+      Serial.flush();  // 디버그 출력 완전 전송
     }
 
+    // 디버그 출력
+    Serial.print("Buffer: ");
     for (int i = 0; i < NO_DATA ; i++)
     {
       Serial.print(buf[i], HEX);
       Serial.print(" ");
     }
     Serial.println(" ");
+    Serial.flush();  // 디버그 출력 완전 전송
   }
 }
 

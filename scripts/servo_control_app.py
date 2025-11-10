@@ -13,7 +13,6 @@ import serial.tools.list_ports
 import sys
 import struct
 import os
-import time
 from datetime import datetime
 
 
@@ -77,13 +76,6 @@ class ServoControlApp(QtWidgets.QMainWindow):
 
         # 로그 지우기
         self.btn_clear_log.clicked.connect(self.textEdit_log.clear)
-
-        # 캘리브레이션 버튼 (있으면 연결, 없으면 무시)
-        try:
-            self.btn_calibrate_c620.clicked.connect(self.calibrate_c620)
-            self.btn_arm_c620.clicked.connect(self.arm_c620)
-        except AttributeError:
-            pass  # UI에 캘리브레이션 버튼이 없으면 무시
 
         # 메뉴 액션
         self.action_exit.triggered.connect(self.close)
@@ -243,115 +235,6 @@ class ServoControlApp(QtWidgets.QMainWindow):
         scrollbar = self.textEdit_log.verticalScrollBar()
         scrollbar.setValue(scrollbar.maximum())
 
-    def calibrate_c620(self):
-        """
-        DJI C620 ESC 캘리브레이션 수행
-
-        절차:
-        1. 최대값(2000μs) 3초 전송
-        2. 사용자가 C620 전원을 켜도록 대기
-        3. 비프음 확인 후 계속
-        4. 최소값(1000μs) 3초 전송
-        5. 비프음 확인 - 완료
-        """
-        if not self.serial_port or not self.serial_port.is_open:
-            QtWidgets.QMessageBox.warning(self, "경고", "먼저 시리얼 포트를 연결하세요!")
-            return
-
-        reply = QtWidgets.QMessageBox.question(
-            self,
-            'C620 캘리브레이션',
-            'C620 캘리브레이션을 시작합니다.\n\n'
-            '절차:\n'
-            '1. 먼저 C620의 전원을 끄세요\n'
-            '2. "확인"을 누르면 최대값 전송 시작\n'
-            '3. C620 전원을 켜세요\n'
-            '4. 비프음이 들리면 다음 단계 진행\n\n'
-            '준비되셨습니까?',
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No
-        )
-
-        if reply == QtWidgets.QMessageBox.No:
-            return
-
-        self.log_message("=" * 50)
-        self.log_message("[캘리브레이션] C620 캘리브레이션 시작")
-        self.log_message("1단계: 최대값(2000μs) 전송 중...")
-
-        # 1단계: 최대값 3초간 전송
-        self.slider_servo1.setValue(2000)
-        self.slider_servo2.setValue(2000)
-        QtWidgets.QApplication.processEvents()
-        time.sleep(3)
-
-        QtWidgets.QMessageBox.information(
-            self,
-            '캘리브레이션',
-            '이제 C620의 전원을 켜세요!\n\n'
-            '비프음이 들리면 "확인"을 누르세요.'
-        )
-
-        self.log_message("2단계: 최소값(1000μs) 전송 중...")
-
-        # 2단계: 최소값 3초간 전송
-        self.slider_servo1.setValue(1000)
-        self.slider_servo2.setValue(1000)
-        QtWidgets.QApplication.processEvents()
-        time.sleep(3)
-
-        self.log_message("✓ 캘리브레이션 완료!")
-        self.log_message("비프음이 들렸다면 캘리브레이션 성공")
-        self.log_message("=" * 50)
-
-        # 중립값으로 복귀
-        self.slider_servo1.setValue(1444)
-        self.slider_servo2.setValue(1444)
-
-        QtWidgets.QMessageBox.information(
-            self,
-            '완료',
-            '캘리브레이션이 완료되었습니다!\n\n'
-            '이제 모터를 제어할 수 있습니다.'
-        )
-
-    def arm_c620(self):
-        """
-        C620 아밍(Arming) 수행
-        최소값을 3초간 유지하여 ESC 준비 상태로 전환
-        """
-        if not self.serial_port or not self.serial_port.is_open:
-            QtWidgets.QMessageBox.warning(self, "경고", "먼저 시리얼 포트를 연결하세요!")
-            return
-
-        self.log_message("=" * 50)
-        self.log_message("[아밍] C620 아밍 시작")
-        self.log_message("최소값(1000μs)을 3초간 유지...")
-
-        # 최소값 3초간 전송
-        self.slider_servo1.setValue(1000)
-        self.slider_servo2.setValue(1000)
-        QtWidgets.QApplication.processEvents()
-
-        for i in range(3, 0, -1):
-            self.log_message(f"  {i}초...")
-            time.sleep(1)
-            QtWidgets.QApplication.processEvents()
-
-        self.log_message("✓ 아밍 완료!")
-        self.log_message("C620이 준비되었습니다")
-        self.log_message("=" * 50)
-
-        # 중립값으로 복귀
-        self.slider_servo1.setValue(1444)
-        self.slider_servo2.setValue(1444)
-
-        QtWidgets.QMessageBox.information(
-            self,
-            '완료',
-            '아밍이 완료되었습니다!\n\n'
-            'C620이 제어 명령을 받을 준비가 되었습니다.'
-        )
-
     def show_about(self):
         """정보 대화상자를 표시합니다."""
         about_text = """
@@ -363,12 +246,8 @@ class ServoControlApp(QtWidgets.QMainWindow):
         <p><code># [servo1_high] [servo1_low] [servo2_high] [servo2_low] *</code></p>
         <br>
         <p>펄스 폭 범위: 1000μs ~ 2000μs</p>
-        <p>PWM 주파수: 50Hz (20ms 주기)</p>
-        <br>
-        <p><b>처음 사용 시:</b></p>
-        <p>1. 아밍 버튼 클릭 (또는 캘리브레이션)</p>
-        <p>2. 비프음 확인</p>
-        <p>3. 제어 시작</p>
+        <p>중립값: 1444μs</p>
+        <p>PWM 주기: 15ms (66.7Hz)</p>
         """
         QtWidgets.QMessageBox.about(self, "정보", about_text)
 
