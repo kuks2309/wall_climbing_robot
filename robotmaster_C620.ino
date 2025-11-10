@@ -70,6 +70,9 @@ void loop()
       pwm_command2.bytedata[1] = buf[3];
       pwm_command2.bytedata[0] = buf[4];
 
+      // 서보모터 1 (왼쪽) 방향 반전: 2888 - 입력값
+      pwm_command1.pulsewidth = 2888 - pwm_command1.pulsewidth;
+
       Serial.println("Receive Protocol");
       Serial.print("left pulse width : ");
       Serial.println(pwm_command1.pulsewidth);
